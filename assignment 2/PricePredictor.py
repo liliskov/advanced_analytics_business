@@ -10,18 +10,18 @@ from Make_Price_train_test import Make_Price_train_test
 from Net import Net
 from tqdm import tqdm
 
-class PricePredicter:
+class PricePredictor:
     def __init__(self):
         self.device =  torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         train_transforms  = transforms.Compose([
-            transforms.Resize((64,64)),
+            transforms.Resize((512, 288)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(45),
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x[:3, :, :])
         ])
         test_transforms  = transforms.Compose([
-            transforms.Resize((64,64)),
+            transforms.Resize((512, 288)),
             transforms.ToTensor(),
             transforms.Lambda(lambda x: x[:3, :, :]),
         ])
@@ -31,12 +31,12 @@ class PricePredicter:
         
         self.dl_train = DataLoader(
             train_data,
-            batch_size=16,
+            batch_size=8,
             shuffle = True
         )
         self.dl_test = DataLoader(
             test_data,
-            batch_size=16,
+            batch_size=8,
             shuffle = True
         )
         self.train_classifier()
@@ -49,10 +49,10 @@ class PricePredicter:
         criterion = nn.MSELoss()
         criterion.to(self.device)
 
-        optimizer = optim.Adam(net.parameters(), lr = 0.001)
+        optimizer = optim.Adam(net.parameters(), lr = 0.01)
 
         print("Model training...")
-        for epoch in range(1):
+        for epoch in range(3):
             print(f"current epoch: {epoch}")
             running_loss = 0.0
             with tqdm(self.dl_train) as t:
@@ -83,4 +83,4 @@ class PricePredicter:
             average_loss = total_loss / total_samples
             print(f"Validation Loss: {average_loss}")
 
-trainer = PricePredicter()
+trainer = PricePredictor()
