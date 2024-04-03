@@ -46,7 +46,7 @@ class PricePredictor:
         net = Net()
         net.to(self.device)
 
-        criterion = nn.MSELoss()
+        criterion = nn.L1Loss()
         criterion.to(self.device)
 
         optimizer = optim.Adam(net.parameters(), lr = 0.01)
