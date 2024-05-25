@@ -15,7 +15,7 @@ class Net(nn.Module):
             # nn.ELU(),
             nn.Flatten()
         )
-        self.classification = nn.Linear(2359296, num_classes)
+        self.classification = nn.Linear(802816, num_classes)
 
 
 

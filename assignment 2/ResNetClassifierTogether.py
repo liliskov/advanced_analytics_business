@@ -16,11 +16,13 @@ from ResNetModel import ResNetModel
 from KeepImagesTogether import KeepImagesTogether
 from TogetherDataset import TogetherDataset
 import torch.nn.functional as F
+from sklearn.metrics import recall_score, precision_score, f1_score, confusion_matrix
+
 
 class ResNetClassifierTogether:
 
     def __init__(self):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device =  'cpu' #torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         sent_im = KeepImagesTogether()
         # TRANSFORMATIONS ALREADY DONE BEFOREHAND
         # train_transforms  = transforms.Compose([
@@ -59,13 +61,13 @@ class ResNetClassifierTogether:
             return images_stacked, labels_tensor
         self.dl_train = DataLoader(
             train_data,
-            batch_size=32,
+            batch_size=8,
             shuffle = True,
             collate_fn=custom_collate
         )
         self.dl_test = DataLoader(
             test_data,
-            batch_size=32,
+            batch_size=8,
             shuffle = True,
             collate_fn=custom_collate
         )
@@ -75,10 +77,11 @@ class ResNetClassifierTogether:
         device =  self.device
         net = ResNetModel().to(device)
 
-        criterion = nn.CrossEntropyLoss().to(device)
+        class_weights = torch.tensor([1.51, 6.03, 6.70, 45.43], dtype=torch.float).to(self.device)
+        criterion = nn.CrossEntropyLoss(weight=class_weights).to(device)
         optimizer = optim.Adam(net.parameters(), lr = 0.001)
         print("Model training...")
-        for epoch in range(20):
+        for epoch in range(3):
             print(f"current epoch: {epoch}")
             running_loss = 0.0
             with tqdm(self.dl_train) as t:
@@ -104,26 +107,24 @@ class ResNetClassifierTogether:
         all_labels = []
         with torch.no_grad():
             for images, labels in tqdm(self.dl_test):
-                images = images.to(device)
-                labels = labels.to(device)
+                images = images.to(self.device)
+                labels = labels.to(self.device)
                 outputs = net(images)
                 _, preds = torch.max(outputs, 1)
                 all_preds.extend(preds.cpu().numpy())
                 all_labels.extend(labels.cpu().numpy())
 
-
         recall_per_class = recall_score(all_labels, all_preds, average=None)
+        precision_per_class = precision_score(all_labels, all_preds, average=None)
+        f1_per_class = f1_score(all_labels, all_preds, average=None)
         average_recall = np.mean(recall_per_class)
+        conf_matrix = confusion_matrix(all_labels, all_preds)
 
         print("Recall per class:", recall_per_class)
+        print("Precision per class:", precision_per_class)
+        print("F1 Score per class:", f1_per_class)
         print("Average Recall:", average_recall)
-        df_preds = pd.DataFrame(all_preds, columns=['predictions'])
-        df_labels = pd.DataFrame(all_labels, columns=['labels'])
-
-        # Save DataFrame to CSV
-        df_preds.to_csv('preds.csv', index=False)
-        df_labels.to_csv('labels.csv', index=False)
-    
+        print("Confusion Matrix:\n", conf_matrix)
 
 
 

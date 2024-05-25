@@ -13,3 +13,4 @@ from .TogetherDataset import TogetherDataset
 from .KeepImagesTogether import KeepImagesTogether
 from .ResNetClassifierTogether import ResNetClassifierTogether
 from .FromScratchTogetherClassifier import FromScratchTogetherClassifier
+from. ImageDatasetGroupedInference import ImageDatasetGroupedInference
